@@ -6,32 +6,78 @@ import {
   Image,
   ScrollView,
   StyleSheet,
+  Switch,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {COLORS} from '../Assets/theme/COLOR';
-import {request_weather_data} from '../Redux/Actions/publicDataActions';
 import {getWeatherIcon} from '../utils';
 import CityInfo from './CityInfo';
 import CurrentWeather from './CurrentWeather';
 import HourlyInfo from './HourlyInfo';
+import CSafeAreaView from '../Common/CSafearewView';
+import {
+  request_current_location,
+  toggle_temp,
+} from '../Redux/Actions/publicDataActions';
+import strings from '../i18n/strings';
+import {changeAppLanguage, getAsyncStorageData} from '../Helper/helper';
+import GetLocationPermission, {
+  ASYNC_SEL_LANGUAGE,
+} from '../Helper/PermissionLocation';
+import {CLoader} from '../Common/CLoader';
 const windowWidth = Dimensions.get('window').width;
 
+export const convertFarhenheit = temp => {
+  return ((temp * 9) / 5 + 32).toFixed(1);
+};
+
 const WeatherForecast = () => {
-  const [selectedCity, setSelectedCity] = useState('Surat');
-  const [selectedState, setSelectedState] = useState('Gujarat');
   const [selectedDayDate, setSelectedDayDate] = useState(
     new Date().toISOString().split('T')[0],
   );
-  const {weather_data, weather_loading} = useSelector(state => state.params);
+
+  const [language, setLanguage] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const dispatch = useDispatch();
+  const state = useSelector(state => state.params);
+  const isFahrenheit = state.is_temp_c;
+  const {weather_data, weather_loading, city_data} = useSelector(
+    state => state.params,
+  );
+
+  const getSelectedDateHours =
+    weather_data?.days?.filter(a => a.datetime == selectedDayDate)?.[0]
+      ?.hours || [];
+  const getSelectedDay =
+    weather_data?.days?.filter(a => a.datetime == selectedDayDate)?.[0] || [];
 
   useEffect(() => {
-    dispatch(request_weather_data(selectedCity));
+    getLanguage();
+    getPermission();
   }, []);
+
+  const getPermission = async () => {
+    const permission = await GetLocationPermission();
+    dispatch(request_current_location(permission.coords));
+  };
+
+  const getLanguage = async () => {
+    setIsLoading(true);
+    const lan = await getAsyncStorageData(ASYNC_SEL_LANGUAGE);
+    if (lan) {
+      setLanguage(lan === 'hi');
+      changeAppLanguage(lan);
+    }
+    setIsLoading(false);
+  };
+
+  const handleFahrenheit = toggle => {
+    dispatch(toggle_temp(toggle));
+  };
 
   const renderCurrentWeatherCards = ({item}) => {
     const today = new Date();
@@ -39,9 +85,9 @@ const WeatherForecast = () => {
 
     let dateString = cardDate.toLocaleDateString();
     if (cardDate.getDate() === today.getDate()) {
-      dateString = 'Today';
+      dateString = strings.today;
     } else if (cardDate.getDate() === today.getDate() + 1) {
-      dateString = 'Tomorrow';
+      dateString = strings.tomorrow;
     }
 
     const weatherIcon = getWeatherIcon(item.conditions);
@@ -76,7 +122,9 @@ const WeatherForecast = () => {
               ? {color: COLORS.light_shade}
               : {},
           ]}>
-          {item.temp}°C
+          {isFahrenheit
+            ? `${convertFarhenheit(item.temp)}°F`
+            : `${item.temp}°C`}
         </Text>
       </TouchableOpacity>
     );
@@ -86,16 +134,39 @@ const WeatherForecast = () => {
     return <HourlyInfo data={item} />;
   };
 
-  const getSelectedDateHours =
-    weather_data?.days?.filter(a => a.datetime == selectedDayDate)?.[0]
-      ?.hours || [];
-  const getSelectedDay =
-    weather_data?.days?.filter(a => a.datetime == selectedDayDate)?.[0] || [];
+  const selectLanguageFun = async () => {
+    setLanguage(!language);
+    changeAppLanguage(!language ? 'hi' : 'en');
+  };
 
   return (
-    <View>
-      <CityInfo city={selectedCity} state={selectedState} />
-
+    <CSafeAreaView>
+      <CityInfo />
+      <Text style={[styles.forecastTitle, {alignSelf: 'flex-start'}]}>
+        Current Location : {city_data?.address?.city}
+      </Text>
+      <View style={styles.labelview}>
+        <Text style={styles.forecastTitle}>{strings.selectLanguage}</Text>
+        <Text style={styles.forecastTitle}>{strings.convert}</Text>
+      </View>
+      <View style={styles.switchview}>
+        <View style={styles.switclabel}>
+          <Text style={styles.label}>En</Text>
+          <Switch
+            onValueChange={selectLanguageFun}
+            value={language}
+            trackColor={{false: COLORS.dark_shade, true: COLORS.primary}}
+            thumbColor={COLORS.light_shade}
+          />
+          <Text style={styles.label}>Hi</Text>
+        </View>
+        <Switch
+          trackColor={{false: COLORS.dark_shade, true: COLORS.primary}}
+          thumbColor={COLORS.light_shade}
+          value={isFahrenheit}
+          onValueChange={handleFahrenheit}
+        />
+      </View>
       <ScrollView>
         {weather_loading ? (
           <ActivityIndicator size={'small'} color={COLORS.primary} />
@@ -128,7 +199,8 @@ const WeatherForecast = () => {
           </>
         )}
       </ScrollView>
-    </View>
+      {isLoading && <CLoader />}
+    </CSafeAreaView>
   );
 };
 
@@ -139,11 +211,10 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   forecastTitle: {
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: 'bold',
     textAlign: 'center',
     marginTop: 20,
-    marginBottom: 8,
     color: COLORS.dark_shade,
   },
   selectCity: {
@@ -168,7 +239,6 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   forecastCard: {
-    // width: (windowWidth * 0.4) / 2,
     height: (windowWidth * 0.65) / 2,
     padding: 15,
     backgroundColor: '#fff',
@@ -216,6 +286,30 @@ const styles = StyleSheet.create({
     marginTop: 20,
     width: '100%',
     marginBottom: 70,
+  },
+  switchview: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginVertical: 10,
+  },
+  switclabel: {
+    justifyContent: 'center',
+    padding: 5,
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 5,
+  },
+  label: {
+    color: COLORS.dark_shade,
+    fontSize: 16,
+  },
+  labelview: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginVertical: 10,
+    marginHorizontal: 5,
   },
 });
 

@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 import {
   Modal,
   View,
@@ -10,16 +10,58 @@ import {
 } from 'react-native';
 import {COLORS} from '../Assets/theme/COLOR';
 import {cities, states} from '../Assets/theme/appDataConfig';
+import CTextInput from '../Common/CTextInput';
+import {useDispatch, useSelector} from 'react-redux';
+import {
+  request_weather_data,
+  store_state,
+} from '../Redux/Actions/publicDataActions';
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
 
 const CitySelectorModal = ({visible, onClose}) => {
+  const [search, setSearch] = useState('');
+  const [selectedCity, setSelectedCity] = useState('Surat');
+
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(request_weather_data(selectedCity));
+  }, [selectedCity]);
+
+  const newData = useMemo(() => {
+    return states.map(state => {
+      return {
+        ...state,
+        cities: cities.filter(city => city.stateId === state.id),
+      };
+    });
+  }, [states, cities]);
+
+  const handleStateSearch = useMemo(() => {
+    const filterState = newData.filter(state =>
+      state.name.toLowerCase().includes(search.toLowerCase()),
+    );
+    if (filterState.length === 0) {
+      const filterCity = newData.map(state => {
+        return {
+          ...state,
+          cities: state.cities.filter(city =>
+            city.name.toLowerCase().includes(search.toLowerCase()),
+          ),
+        };
+      });
+      return filterCity.filter(state => state.cities.length > 0);
+    }
+    return search ? filterState : newData;
+  }, [search]);
+
   const renderStates = ({item}) => (
     <View>
       <Text style={styles.stateName}>{item.name}</Text>
       <View style={styles.cityInfoContent}>
         <FlatList
-          data={cities.filter(city => city.stateId === item.id)}
+          data={item?.cities}
           renderItem={renderCities}
           keyExtractor={item => item.id.toString()}
           showsVerticalScrollIndicator={false}
@@ -29,9 +71,17 @@ const CitySelectorModal = ({visible, onClose}) => {
   );
 
   const renderCities = ({item}) => (
-    <TouchableOpacity onPress={() => {}}>
-      <Text style={styles.cityName}>{item.name}</Text>
-    </TouchableOpacity>
+    <View>
+      <TouchableOpacity
+        onPress={() => {
+          setSelectedCity(item?.name);
+          dispatch(store_state(item));
+          onClose();
+          setSearch('');
+        }}>
+        <Text style={styles.cityName}>{item.name}</Text>
+      </TouchableOpacity>
+    </View>
   );
 
   return (
@@ -43,8 +93,15 @@ const CitySelectorModal = ({visible, onClose}) => {
       <View style={styles.modalContent}>
         <View style={styles.regionInfoContent}>
           <Text style={styles.modalHeaderText}>Select Your State</Text>
+          <CTextInput
+            placeholder="Search State"
+            value={search}
+            onChangeText={text => {
+              setSearch(text);
+            }}
+          />
           <FlatList
-            data={states}
+            data={handleStateSearch}
             renderItem={renderStates}
             keyExtractor={item => item.id.toString()}
             showsVerticalScrollIndicator={false}

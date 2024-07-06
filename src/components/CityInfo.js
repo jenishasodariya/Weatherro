@@ -1,14 +1,29 @@
 import {Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
-import React, {useState} from 'react';
+import React, {useMemo, useState} from 'react';
 import {COLORS} from '../Assets/theme/COLOR';
 import {AppImages} from '../Assets/Images';
-import {MapPinIcon} from 'react-native-heroicons/solid';
+import {MapPinIcon, SwatchIcon} from 'react-native-heroicons/solid';
 import {ChevronDownIcon} from 'react-native-heroicons/mini';
 import CitySelectorModal from './CitySelectorModal';
+import {useSelector} from 'react-redux';
+import {states} from '../Assets/theme/appDataConfig';
 
-const CityInfo = props => {
+const CityInfo = () => {
   const [showModal, setShowModal] = useState(false);
+
+  const state = useSelector(state => state.params);
+
   const today = new Date();
+
+  const getStateData = useMemo(() => {
+    if (state?.weather_data_state) {
+      let stateGet = states.find(
+        item => item.id == state?.weather_data_state?.stateId,
+      );
+      return stateGet?.name;
+    }
+  }, [state?.weather_data_state]);
+
   return (
     <View>
       <TouchableOpacity
@@ -22,7 +37,7 @@ const CityInfo = props => {
           />
           <View>
             <Text style={styles.cityInfoText}>
-              {props.city}, {props.state}
+              {state?.location}, {getStateData}
             </Text>
             <Text style={styles.todayDate}>{today.toDateString()}</Text>
           </View>

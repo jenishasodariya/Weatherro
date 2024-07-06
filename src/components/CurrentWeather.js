@@ -1,74 +1,75 @@
-import { Dimensions, Image, StyleSheet, Text, View } from 'react-native';
+import {Dimensions, Image, StyleSheet, Text, View} from 'react-native';
 import React from 'react';
-import { COLORS } from '../Assets/theme/COLOR';
-import { AppImages } from '../Assets/Images';
+import {COLORS} from '../Assets/theme/COLOR';
+import {AppImages} from '../Assets/Images';
 import LinearGradient from 'react-native-linear-gradient';
-import { getWeatherIcon } from '../utils';
+import {getWeatherIcon} from '../utils';
+import {useSelector} from 'react-redux';
+import {convertFarhenheit} from './WeatherForecast';
 const windowWidth = Dimensions.get('window').width;
 
-const CurrentWeather = ({ currentWeather }) => {
+const CurrentWeather = ({currentWeather}) => {
   const currentDate = new Date();
+
+  const state = useSelector(state => state.params);
+  const isFahrenheit = state.is_temp_c;
 
   const currentTime = currentDate.toLocaleTimeString();
   return (
-    // <View style={styles.currentWeatherContainer}>
-    <LinearGradient colors={['rgb(115,230,251)', 'rgb(82,146,256)',]} start={{ x: 0.25, y: 0.25 }} end={{ x: 0.5, y: 0.75 }}
-      locations={[0, 0.9]} style={styles.currentWeatherContainer}>
+    <LinearGradient
+      colors={['rgb(115,230,251)', 'rgb(82,146,256)']}
+      start={{x: 0.25, y: 0.25}}
+      end={{x: 0.5, y: 0.75}}
+      locations={[0, 0.9]}
+      style={styles.currentWeatherContainer}>
       <View style={styles.todayWeatherContainer}>
         <Image
           source={getWeatherIcon(currentWeather.conditions)}
           style={styles.currentWeatherIcon}
         />
         <View>
-          <View style={{ position: 'absolute', top: 15 }}>
+          <View style={{position: 'absolute', top: 15}}>
             <Text style={styles.weatherCondition}>
               {currentWeather.conditions}
             </Text>
             <Text style={styles.currentTime}>{currentTime}</Text>
           </View>
         </View>
-        <View style={{ marginTop: 12, width: '40%' }}>
-          <Text style={styles.todayTemp}>{currentWeather.temp}°C</Text>
+        <View style={{marginTop: 12, width: '40%'}}>
+          <Text style={styles.todayTemp}>
+            {isFahrenheit
+              ? `${convertFarhenheit(currentWeather.temp)}°F`
+              : `${currentWeather.temp}°C`}
+          </Text>
           <Text style={styles.feelsLike}>
             Feel like {currentWeather.feelslike}
           </Text>
-          <Image
-            source={AppImages.windWave}
-            style={styles.windWavePng}
-          />
+          <Image source={AppImages.windWave} style={styles.windWavePng} />
         </View>
       </View>
       <View style={styles.extraInfoCard}>
-        <View style={{ alignItems: 'center' }}>
+        <View style={{alignItems: 'center'}}>
           <View style={styles.extraInfo}>
-            <Image
-              source={AppImages.heavyRain}
-              style={styles.extraInfoImg}
-            />
+            <Image source={AppImages.heavyRain} style={styles.extraInfoImg} />
           </View>
           <Text style={styles.extraInfoText}>{currentWeather.cloudcover}%</Text>
         </View>
-        <View style={{ alignItems: 'center' }}>
+        <View style={{alignItems: 'center'}}>
           <View style={styles.extraInfo}>
-            <Image
-              source={AppImages.wind}
-              style={styles.extraInfoImg}
-            />
+            <Image source={AppImages.wind} style={styles.extraInfoImg} />
           </View>
-          <Text style={styles.extraInfoText}>{currentWeather.windspeed}km/h</Text>
+          <Text style={styles.extraInfoText}>
+            {currentWeather.windspeed}km/h
+          </Text>
         </View>
-        <View style={{ alignItems: 'center' }}>
+        <View style={{alignItems: 'center'}}>
           <View style={styles.extraInfo}>
-            <Image
-              source={AppImages.sun}
-              style={styles.extraInfoImg}
-            />
+            <Image source={AppImages.sun} style={styles.extraInfoImg} />
           </View>
           <Text style={styles.extraInfoText}>{currentWeather.humidity}%</Text>
         </View>
       </View>
     </LinearGradient>
-    // </View>
   );
 };
 
@@ -101,13 +102,13 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: COLORS.tempText,
     textTransform: 'uppercase',
-    marginTop: 10
+    marginTop: 10,
   },
   currentTime: {
     fontSize: 11,
     color: COLORS.white,
     textTransform: 'uppercase',
-    marginTop: 5
+    marginTop: 5,
   },
   todayTemp: {
     fontSize: 40,
@@ -131,7 +132,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     justifyContent: 'space-around',
     marginVertical: 20,
-    width: '100%'
+    width: '100%',
   },
   extraInfo: {
     height: 50,
@@ -144,10 +145,10 @@ const styles = StyleSheet.create({
   extraInfoText: {
     fontSize: 12,
     color: COLORS.white,
-    marginTop: 3
+    marginTop: 3,
   },
   extraInfoImg: {
     height: '70%',
-    width: '70%'
-  }
+    width: '70%',
+  },
 });

@@ -1,10 +1,9 @@
-import {View, Text, StyleSheet, Dimensions} from 'react-native';
-import React from 'react';
+import {View, StyleSheet} from 'react-native';
+import React, {useEffect} from 'react';
 import WeatherForecast from './components/WeatherForecast';
-import {COLORS} from './Assets/theme/COLOR';
 import {Provider} from 'react-redux';
 import configureStore from './Redux/store';
-const windowWidth = Dimensions.get('window').width;
+import GetLocationPermission from './Helper/PermissionLocation';
 
 const App = () => {
   return (
