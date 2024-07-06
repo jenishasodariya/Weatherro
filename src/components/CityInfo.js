@@ -15,6 +15,7 @@ const CityInfo = () => {
 
   const today = new Date();
 
+  // Get the state from the store and find the state name
   const getStateData = useMemo(() => {
     if (state?.weather_data_state) {
       let stateGet = states.find(

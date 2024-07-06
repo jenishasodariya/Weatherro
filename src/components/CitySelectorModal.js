@@ -11,7 +11,7 @@ import {
 import {COLORS} from '../Assets/theme/COLOR';
 import {cities, states} from '../Assets/theme/appDataConfig';
 import CTextInput from '../Common/CTextInput';
-import {useDispatch, useSelector} from 'react-redux';
+import {useDispatch} from 'react-redux';
 import {
   request_weather_data,
   store_state,
@@ -25,10 +25,12 @@ const CitySelectorModal = ({visible, onClose}) => {
 
   const dispatch = useDispatch();
 
+  // Get the state from the store
   useEffect(() => {
     dispatch(request_weather_data(selectedCity));
   }, [selectedCity]);
 
+  // Combine the states and cities data
   const newData = useMemo(() => {
     return states.map(state => {
       return {
@@ -38,6 +40,7 @@ const CitySelectorModal = ({visible, onClose}) => {
     });
   }, [states, cities]);
 
+  // Filter the states and cities data
   const handleStateSearch = useMemo(() => {
     const filterState = newData.filter(state =>
       state.name.toLowerCase().includes(search.toLowerCase()),

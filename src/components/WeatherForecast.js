@@ -1,3 +1,4 @@
+// Library Imports
 import React, {useEffect, useState} from 'react';
 import {
   ActivityIndicator,
@@ -12,6 +13,8 @@ import {
   View,
 } from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
+
+// Local Imports
 import {COLORS} from '../Assets/theme/COLOR';
 import {getWeatherIcon} from '../utils';
 import CityInfo from './CityInfo';
@@ -30,10 +33,12 @@ import GetLocationPermission, {
 import {CLoader} from '../Common/CLoader';
 const windowWidth = Dimensions.get('window').width;
 
+// Convert Value to Fahrenheit
 export const convertFarhenheit = temp => {
   return ((temp * 9) / 5 + 32).toFixed(1);
 };
 
+// Weather Forecast Component
 const WeatherForecast = () => {
   const [selectedDayDate, setSelectedDayDate] = useState(
     new Date().toISOString().split('T')[0],
@@ -43,6 +48,8 @@ const WeatherForecast = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const dispatch = useDispatch();
+
+  // Get the state from the store
   const state = useSelector(state => state.params);
   const isFahrenheit = state.is_temp_c;
   const {weather_data, weather_loading, city_data} = useSelector(
@@ -55,16 +62,19 @@ const WeatherForecast = () => {
   const getSelectedDay =
     weather_data?.days?.filter(a => a.datetime == selectedDayDate)?.[0] || [];
 
+  // Get the current location and language
   useEffect(() => {
     getLanguage();
     getPermission();
   }, []);
 
+  // Get the current location
   const getPermission = async () => {
     const permission = await GetLocationPermission();
     dispatch(request_current_location(permission.coords));
   };
 
+  // Get the language from the async storage
   const getLanguage = async () => {
     setIsLoading(true);
     const lan = await getAsyncStorageData(ASYNC_SEL_LANGUAGE);
@@ -75,6 +85,7 @@ const WeatherForecast = () => {
     setIsLoading(false);
   };
 
+  // Toggle the temperature
   const handleFahrenheit = toggle => {
     dispatch(toggle_temp(toggle));
   };
@@ -134,6 +145,7 @@ const WeatherForecast = () => {
     return <HourlyInfo data={item} />;
   };
 
+  // Select the language
   const selectLanguageFun = async () => {
     setLanguage(!language);
     changeAppLanguage(!language ? 'hi' : 'en');

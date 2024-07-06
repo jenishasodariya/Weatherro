@@ -12,6 +12,8 @@ const CurrentWeather = ({currentWeather}) => {
   const currentDate = new Date();
 
   const state = useSelector(state => state.params);
+
+  // Get the state from the store
   const isFahrenheit = state.is_temp_c;
 
   const currentTime = currentDate.toLocaleTimeString();

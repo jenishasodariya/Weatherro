@@ -9,6 +9,8 @@ const windowWidth = Dimensions.get('window').width;
 
 const HourlyInfo = ({data}) => {
   const state = useSelector(state => state.params);
+
+  // Get the state from the store
   const isFahrenheit = state.is_temp_c;
   return (
     <View style={styles.container}>
