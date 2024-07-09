@@ -155,7 +155,7 @@ const WeatherForecast = () => {
     <CSafeAreaView>
       <CityInfo />
       <Text style={[styles.forecastTitle, {alignSelf: 'flex-start'}]}>
-        Current Location : {city_data?.address?.city}
+        {strings.currentlocation} : {city_data?.address?.city}
       </Text>
       <View style={styles.labelview}>
         <Text style={styles.forecastTitle}>{strings.selectLanguage}</Text>

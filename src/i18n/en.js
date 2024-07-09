@@ -3,4 +3,5 @@ export default {
   today: 'Today',
   tomorrow: 'Tomorrow',
   selectLanguage: 'Select Language',
+  currentlocation: 'Current Location',
 };

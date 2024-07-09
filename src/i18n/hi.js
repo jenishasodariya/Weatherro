@@ -3,4 +3,5 @@ export default {
   today: 'आज',
   tomorrow: 'कल',
   selectLanguage: 'भाषा चुनें',
+  currentlocation: 'वर्तमान स्थान',
 };
